@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radar Data Display</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="radar" id = "radar">
+        <div class="beam" id = "beam"></div>
+        <script>const socket = new WebSocket('ws://localhost:4000');
+            socket.onopen = () => {
+                console.log('Підключено до WebSocket сервера');
+            };
+            socket.onmessage = (event) => {
+                var b = document.getElementById("radar");
+                var beam = document.getElementById("beam");
+                const offsetX = b.offsetWidth*0.5
+                const offsetY = b.offsetHeight*0.5
+                //console.log('Отримані дані:', event.data);
+                const distance = 200;
+                const jsonObject = JSON.parse(event.data);
+                //const x = 0.5 * Math.cos(parseInt(jsonObject.scanAngle,10));
+                var a = document.getElementById("dot");
+                //const y = 0.5 * Math.sin(Number(jsonObject.scanAngle));
+                if(jsonObject.echoResponses.length>0)
+                {
+                    console.log(jsonObject);
+                    const relativeDistance = ((jsonObject.echoResponses[0].time*300000)/2)/distance;
+                    console.log(relativeDistance)
+                    const x = relativeDistance * Math.cos((Number(jsonObject.scanAngle)/180)*Math.PI);
+                    const y = relativeDistance * Math.sin((Number(jsonObject.scanAngle)/180)*Math.PI);
+                    a.style.setProperty("--x",String(x));
+                    a.style.setProperty("--y",String(y));
+                }
+                beam.style.setProperty("--angle",jsonObject.scanAngle + "deg");
+                a.style.setProperty("--offsetX",String(offsetX)+"px");
+                a.style.setProperty("--offsetY",String(offsetY)+"px");
+                // Обробка даних та відображення на графіку
+            };
+            socket.onclose = () => {
+                console.log('З\'єднання закрито');
+            };
+            socket.onerror = (error) => {
+                console.error('Помилка WebSocket:', error);
+            };
+            </script>
+        <div class="dot" id = "dot" style="--x:0.7; --y:0.2"></div>
+      </div>
+    <!-- <script src="script.js"></script> -->
+</body>
+</html>
